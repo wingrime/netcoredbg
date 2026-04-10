@@ -52,6 +52,12 @@
 #include "debugger/waitpid.h"
 #include "utils/iosystem.h"
 
+#ifdef WIN32
+#include <windows.h>
+#else
+#include <signal.h>
+#endif
+
 #ifdef INTEROP_DEBUGGING
 #include "elf++.h"
 #include "dwarf++.h"
@@ -207,6 +213,7 @@ ManagedDebuggerBase::ManagedDebuggerBase(IProtocol *pProtocol_) :
     m_stepFiltering(true),
     m_hotReload(false),
     m_interopDebugging(false),
+    m_noDebug(false),
     m_unregisterToken(nullptr),
     m_processId(0),
     m_ioredirect(
@@ -280,7 +287,7 @@ HRESULT ManagedDebugger::Attach(int pid)
 }
 
 HRESULT ManagedDebugger::Launch(const std::string &fileExec, const std::vector<std::string> &execArgs,
-                                const std::map<std::string, std::string> &env, const std::string &cwd, bool stopAtEntry)
+                                const std::map<std::string, std::string> &env, const std::string &cwd, bool stopAtEntry, bool noDebug)
 {
     LogFuncEntry();
 
@@ -289,6 +296,7 @@ HRESULT ManagedDebugger::Launch(const std::string &fileExec, const std::vector<s
     m_execArgs = execArgs;
     m_cwd = cwd;
     m_env = env;
+    m_noDebug = noDebug;
     m_sharedBreakpoints->SetStopAtEntry(stopAtEntry);
     return RunIfReady();
 }
@@ -437,6 +445,9 @@ HRESULT ManagedDebugger::Pause(ThreadId lastStoppedThread, EventFormat eventForm
 HRESULT ManagedDebugger::GetThreads(std::vector<Thread> &threads, bool withNativeThreads)
 {
     LogFuncEntry();
+
+    if (m_noDebug)
+        return S_OK;
 
     std::lock_guard<Utility::RWLock::Reader> guardProcessRWLock(m_debugProcessRWLock.reader);
     HRESULT Status;
@@ -731,7 +742,7 @@ HRESULT ManagedDebuggerHelpers::RunProcess(const std::string& fileExec, const st
 
     Status = m_ioredirect.exec([&]() -> HRESULT {
             IfFailRet(m_dbgshim.CreateProcessForLaunch(reinterpret_cast<LPWSTR>(const_cast<WCHAR*>(to_utf16(ss.str()).c_str())),
-                                     /* Suspend process */ TRUE,
+                                     /* Suspend process */ m_noDebug ? FALSE : TRUE,
                                      outEnv.empty() ? NULL : &outEnv[0],
                                      m_cwd.empty() ? NULL : reinterpret_cast<LPCWSTR>(to_utf16(m_cwd).c_str()),
                                      &m_processId, &resumeHandle));
@@ -745,15 +756,25 @@ HRESULT ManagedDebuggerHelpers::RunProcess(const std::string& fileExec, const st
     GetWaitpid().SetupTrackingPID(m_processId);
 #endif // FEATURE_PAL
 
-    IfFailRet(m_dbgshim.RegisterForRuntimeStartup(m_processId, ManagedDebugger::StartupCallback, this, &m_unregisterToken));
+    if (!m_noDebug)
+    {
+        IfFailRet(m_dbgshim.RegisterForRuntimeStartup(m_processId, ManagedDebugger::StartupCallback, this, &m_unregisterToken));
 
-    // Resume the process so that StartupCallback can run
-    IfFailRet(m_dbgshim.ResumeProcess(resumeHandle));
-    m_dbgshim.CloseResumeHandle(resumeHandle);
+        // Resume the process so that StartupCallback can run
+        IfFailRet(m_dbgshim.ResumeProcess(resumeHandle));
+        m_dbgshim.CloseResumeHandle(resumeHandle);
 
-    std::unique_lock<std::mutex> lockAttachedMutex(m_processAttachedMutex);
-    if (!m_processAttachedCV.wait_for(lockAttachedMutex, startupWaitTimeout, [this]{return m_processAttachedState == ProcessAttachedState::Attached;}))
-        return E_FAIL;
+        std::unique_lock<std::mutex> lockAttachedMutex(m_processAttachedMutex);
+        if (!m_processAttachedCV.wait_for(lockAttachedMutex, startupWaitTimeout, [this]{return m_processAttachedState == ProcessAttachedState::Attached;}))
+            return E_FAIL;
+
+    }
+    else
+    {
+        m_unregisterToken = nullptr;
+        std::unique_lock<std::mutex> lock(m_processAttachedMutex);
+        m_processAttachedState = ProcessAttachedState::Attached;
+    }
 
     pProtocol->EmitExecEvent(PID{m_processId}, fileExec);
 
@@ -809,6 +830,18 @@ HRESULT ManagedDebuggerHelpers::TerminateProcess()
     do {
         std::lock_guard<Utility::RWLock::Reader> guardProcessRWLock(m_debugProcessRWLock.reader);
         std::unique_lock<std::mutex> lockAttachedMutex(m_processAttachedMutex);
+
+
+        if (m_noDebug)
+        {
+#ifdef WIN32
+            TerminateProcess(m_processId, 0);
+
+#else
+            kill(m_processId, SIGTERM);
+#endif
+            return S_OK;
+        }
         if (m_processAttachedState == ProcessAttachedState::Unattached)
             break;
 
@@ -955,6 +988,9 @@ HRESULT ManagedDebugger::SetLineBreakpoints(const std::string& filename,
                                             std::vector<Breakpoint> &breakpoints)
 {
     LogFuncEntry();
+
+    if (m_noDebug)
+        return S_OK;
 
 #ifdef INTEROP_DEBUGGING
     // Note, we don't care about m_interopDebugging here, since breakpoint setup could be start before m_interopDebugging changes with env parsing.
@@ -1375,6 +1411,9 @@ HRESULT ManagedDebugger::GetVariables(
     std::vector<Variable> &variables)
 {
     LogFuncEntry();
+
+    if (m_noDebug)
+        return S_OK;
 
     std::lock_guard<Utility::RWLock::Reader> guardProcessRWLock(m_debugProcessRWLock.reader);
     HRESULT Status;

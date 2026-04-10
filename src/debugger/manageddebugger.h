@@ -103,6 +103,7 @@ protected:
     bool m_stepFiltering;
     bool m_hotReload;
     bool m_interopDebugging;
+    bool m_noDebug;
 
     PVOID m_unregisterToken;
     DWORD m_processId;
@@ -166,7 +167,7 @@ public:
     HRESULT Initialize() override;
     HRESULT Attach(int pid) override;
     HRESULT Launch(const std::string &fileExec, const std::vector<std::string> &execArgs, const std::map<std::string, std::string> &env,
-                   const std::string &cwd, bool stopAtEntry = false) override;
+                   const std::string &cwd, bool stopAtEntry = false, bool noDebug = false) override;
     HRESULT ConfigurationDone() override;
 
     HRESULT Disconnect(DisconnectAction action = DisconnectDefault) override;

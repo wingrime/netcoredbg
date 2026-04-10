@@ -75,7 +75,7 @@ public:
     virtual HRESULT Initialize() = 0;
     virtual HRESULT Attach(int pid) = 0;
     virtual HRESULT Launch(const std::string &fileExec, const std::vector<std::string> &execArgs, const std::map<std::string, std::string> &env,
-        const std::string &cwd, bool stopAtEntry = false) = 0;
+        const std::string &cwd, bool stopAtEntry = false, bool noDebug = false) = 0;
     virtual HRESULT ConfigurationDone() = 0;
     virtual HRESULT Disconnect(DisconnectAction action = DisconnectDefault) = 0;
     virtual ThreadId GetLastStoppedThreadId() = 0;

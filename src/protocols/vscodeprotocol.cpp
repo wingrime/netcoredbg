@@ -597,11 +597,13 @@ static HRESULT HandleCommand(std::shared_ptr<IDebugger> &sharedDebugger, std::st
             env.clear();
         }
 
+        auto noDebug = arguments.value("noDebug", false);
+
         sharedDebugger->SetJustMyCode(arguments.value("justMyCode", true)); // MS vsdbg have "justMyCode" enabled by default.
         sharedDebugger->SetStepFiltering(arguments.value("enableStepFiltering", true)); // MS vsdbg have "enableStepFiltering" enabled by default.
 
         if (!fileExec.empty())
-            return sharedDebugger->Launch(fileExec, execArgs, env, cwd, arguments.value("stopAtEntry", false));
+            return sharedDebugger->Launch(fileExec, execArgs, env, cwd, arguments.value("stopAtEntry", false), noDebug);
 
         std::string program = arguments.at("program").get<std::string>();
         std::vector<std::string> args = arguments.value("args", std::vector<std::string>());
@@ -610,12 +612,12 @@ static HRESULT HandleCommand(std::shared_ptr<IDebugger> &sharedDebugger, std::st
         if (program.size() >= dllSuffix.size() && program.compare(program.size()-dllSuffix.size(), dllSuffix.size(), dllSuffix) == 0)
         {
             args.insert(args.begin(), program);
-            return sharedDebugger->Launch("dotnet", args, env, cwd, arguments.value("stopAtEntry", false));
+            return sharedDebugger->Launch("dotnet", args, env, cwd, arguments.value("stopAtEntry", false), noDebug);
         }
         else
         {
             // If we're not being asked to launch a dll, assume whatever we're given is an executable
-            return sharedDebugger->Launch(program, args, env, cwd, arguments.value("stopAtEntry", false));
+            return sharedDebugger->Launch(program, args, env, cwd, arguments.value("stopAtEntry", false), noDebug);
         }
     } },
     { "threads", [&](const json &arguments, json &body){

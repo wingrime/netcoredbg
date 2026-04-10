@@ -2016,7 +2016,7 @@ HRESULT CLIProtocol::doCommand<CommandTag::Run>(const std::string &, const std::
     HRESULT Status;
     m_sharedDebugger->Initialize();
     m_sources.reset(new SourceStorage(m_sharedDebugger.get()));
-    IfFailRet(m_sharedDebugger->Launch(exec_file, exec_args, {}, "", false));
+    IfFailRet(m_sharedDebugger->Launch(exec_file, exec_args, {}, "", false, false));
 
     lock.lock();
     m_commandMode = CommandMode::Synchronous;

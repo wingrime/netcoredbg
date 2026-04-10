@@ -889,7 +889,7 @@ static HRESULT HandleCommand(std::shared_ptr<IDebugger> &sharedDebugger, Breakpo
         sharedDebugger->Initialize();
         // Note, in case of MI protocol, we enable stop at entry point all the time from debugger side,
         // MIEngine will continue debuggee process at entry point stop event if IDE configured to ignore it.
-        IfFailRet(sharedDebugger->Launch(fileExec, execArgs, {}, "", true));
+        IfFailRet(sharedDebugger->Launch(fileExec, execArgs, {}, "", true, false));
         Status = sharedDebugger->ConfigurationDone();
         if (SUCCEEDED(Status))
             output = "^running";
