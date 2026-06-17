@@ -79,8 +79,7 @@ struct VariableMember
 static HRESULT FillValueAndType(VariableMember &member, Variable &var,
                                 ICorDebugThread *pThread = nullptr,
                                 EvalHelpers *pEvalHelpers = nullptr,
-                                Evaluator *pEvaluator = nullptr,
-                                bool *toStringUsed = nullptr)
+                                Evaluator *pEvaluator = nullptr)
 {
     if (member.value == nullptr)
     {
@@ -92,7 +91,7 @@ static HRESULT FillValueAndType(VariableMember &member, Variable &var,
 
     TypePrinter::GetTypeOfValue(member.value, var.type);
     if (pThread && pEvalHelpers && pEvaluator)
-        return PrintObjectValue(member.value, pThread, pEvalHelpers, pEvaluator, var.evalFlags, var.value, true, toStringUsed);
+        return PrintObjectValue(member.value, pThread, pEvalHelpers, pEvaluator, var.evalFlags, var.value);
     return PrintValue(member.value, var.value, true);
 }
 
@@ -264,11 +263,9 @@ HRESULT Variables::GetStackVariables(
         ToRelease<ICorDebugValue> iCorValue;
         IfFailRet(getValue(&iCorValue, var.evalFlags));
         IfFailRet(TypePrinter::GetTypeOfValue(iCorValue, var.type));
-        bool toStringUsed = false;
-        IfFailRet(PrintObjectValue(iCorValue, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get(), var.evalFlags, var.value, true, &toStringUsed));
+        IfFailRet(PrintObjectValue(iCorValue, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get(), var.evalFlags, var.value));
 
-        if (!toStringUsed)
-            IfFailRet(AddVariableReference(var, frameId, iCorValue, ValueIsVariable));
+        IfFailRet(AddVariableReference(var, frameId, iCorValue, ValueIsVariable));
         variables.push_back(var);
         return S_OK;
     })) && Status != E_ABORT)
@@ -362,10 +359,8 @@ HRESULT Variables::GetChildren(
         bool isIndex = !it.name.empty() && it.name.at(0) == '[';
         if (var.name.find('(') == std::string::npos) // expression evaluator does not support typecasts
             var.evaluateName = ref.evaluateName + (isIndex ? "" : ".") + var.name;
-        bool toStringUsed = false;
-        IfFailRet(FillValueAndType(it, var, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get(), &toStringUsed));
-        if (!toStringUsed)
-            IfFailRet(AddVariableReference(var, ref.frameId, it.value, ValueIsVariable));
+        IfFailRet(FillValueAndType(it, var, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get()));
+        IfFailRet(AddVariableReference(var, ref.frameId, it.value, ValueIsVariable));
         variables.push_back(var);
     }
 
@@ -414,12 +409,9 @@ HRESULT Variables::Evaluate(
 
     variable.evaluateName = expression;
     IfFailRet(TypePrinter::GetTypeOfValue(pResultValue, variable.type));
-    bool toStringUsed = false;
-    IfFailRet(PrintObjectValue(pResultValue, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get(), variable.evalFlags, variable.value, true, &toStringUsed));
+    IfFailRet(PrintObjectValue(pResultValue, pThread, m_sharedEvalHelpers.get(), m_sharedEvaluator.get(), variable.evalFlags, variable.value));
 
-    if (!toStringUsed)
-        return AddVariableReference(variable, frameId, pResultValue, ValueIsVariable);
-    return S_OK;
+    return AddVariableReference(variable, frameId, pResultValue, ValueIsVariable);
 }
 
 HRESULT Variables::SetVariable(

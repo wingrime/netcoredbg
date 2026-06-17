@@ -656,8 +656,7 @@ static HRESULT CallToString(ICorDebugValue *pInputValue, ICorDebugThread *pThrea
 
 HRESULT PrintObjectValue(ICorDebugValue *pInputValue, ICorDebugThread *pThread,
                          EvalHelpers *pEvalHelpers, Evaluator *pEvaluator,
-                         int evalFlags, std::string &output, bool escape,
-                         bool *toStringUsed)
+                         int evalFlags, std::string &output, bool escape)
 {
     bool wasFallback = false;
     HRESULT hr = PrintValue(pInputValue, output, escape, &wasFallback);
@@ -670,8 +669,6 @@ HRESULT PrintObjectValue(ICorDebugValue *pInputValue, ICorDebugThread *pThread,
     if (FAILED(CallToString(pInputValue, pThread, pEvalHelpers, pEvaluator, evalFlags, output)))
         return S_OK;
 
-    if (toStringUsed)
-        *toStringUsed = true;
     return S_OK;
 }
 
