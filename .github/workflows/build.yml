@@ -67,6 +67,36 @@ jobs:
             build/src/Release/*.dll
           if-no-files-found: warn
 
+  build-macos:
+    name: macOS (clang)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          brew install cmake
+
+      - name: Configure
+        run: |
+          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build -j$(sysctl -n hw.logicalcpu)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcoredbg-macos
+          path: |
+            build/src/netcoredbg
+            build/src/*.dylib
+            build/src/*.dll
+          if-no-files-found: warn
+
   build-linux-interop:
     name: Linux (clang, INTEROP)
     runs-on: ubuntu-latest
