@@ -1,0 +1,101 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Linux (clang)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake clang
+
+      - name: Configure
+        run: |
+          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcoredbg-linux
+          path: |
+            build/src/netcoredbg
+            build/src/*.so
+            build/src/*.dll
+          if-no-files-found: warn
+
+  build-windows:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure
+        shell: cmd
+        run: |
+          cmake -B build
+
+      - name: Build
+        run: |
+          cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcoredbg-windows
+          path: |
+            build/src/Release/netcoredbg.exe
+            build/src/Release/*.dll
+          if-no-files-found: warn
+
+  build-linux-interop:
+    name: Linux (clang, INTEROP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev
+
+      - name: Configure
+        run: |
+          CC=clang CXX=clang++ cmake -B build-interop \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DINTEROP_DEBUGGING=1
+
+      - name: Build
+        run: |
+          cmake --build build-interop -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: netcoredbg-linux-interop
+          path: |
+            build-interop/src/netcoredbg
+            build-interop/src/*.so
+            build-interop/src/*.dll
+          if-no-files-found: warn
