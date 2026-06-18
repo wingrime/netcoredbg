@@ -140,18 +140,18 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: nightly-${{ github.run_number }}
-          name: "Nightly #${{ github.run_number }}"
-          files: artifacts/**/*
-          generate_release_notes: true
-          makeLatest: true
+        run: |
+          gh release create nightly-${{ github.run_number }} \
+            $(find artifacts -type f) \
+            --title "Nightly #${{ github.run_number }}" \
+            --generate-notes \
+            --latest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
   build-linux-interop:
     name: Linux (clang, INTEROP)
