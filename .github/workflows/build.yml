@@ -208,7 +208,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang liblttng-ust-dev libunwind-dev libdw-dev
+          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev liblttng-ust-dev
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
