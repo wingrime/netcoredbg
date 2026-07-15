@@ -21,29 +21,36 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang
+          sudo apt-get install -y -qq cmake clang ninja-build
+
+      - name: Clone diagnostics
+        run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
+
+      - name: Build dbgshim
+        run: |
+          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build diagnostics/build --target dbgshim -j$(nproc)
 
       - name: Configure
         run: |
-          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release
+          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release -DDBGSHIM_FROM_SOURCE=ON
 
       - name: Build
         run: |
           cmake --build build -j$(nproc)
 
+      - name: Copy dbgshim
+        run: cp diagnostics/build/src/dbgshim/libdbgshim.so build/src/
+
+      - name: Install
+        run: |
+          cmake --install build --prefix staging
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: netcoredbg-linux
-          path: |
-            build/src/netcoredbg
-            build/src/libdbgshim.so
-            build/src/ManagedPart.dll
-            build/src/Microsoft.CodeAnalysis.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.dll
-            build/src/Microsoft.CodeAnalysis.Scripting.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
-          if-no-files-found: warn
+          path: staging/
 
   build-windows:
     name: Windows (MSVC)
@@ -53,28 +60,35 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clone diagnostics
+        run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
+
+      - name: Build dbgshim
+        run: |
+          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build diagnostics/build --target dbgshim -j $env:NUMBER_OF_PROCESSORS
+
       - name: Configure
         shell: cmd
         run: |
-          cmake -B build
+          cmake -B build -DDBGSHIM_FROM_SOURCE=ON
 
       - name: Build
         run: |
           cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS
 
+      - name: Copy dbgshim
+        run: copy diagnostics\build\src\dbgshim\dbgshim.dll build\src\
+
+      - name: Install
+        run: |
+          cmake --install build --config Release --prefix staging
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: netcoredbg-windows
-          path: |
-            build/src/Release/netcoredbg.exe
-            build/src/dbgshim.dll
-            build/src/ManagedPart.dll
-            build/src/Microsoft.CodeAnalysis.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.dll
-            build/src/Microsoft.CodeAnalysis.Scripting.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
-          if-no-files-found: warn
+          path: staging/
 
   build-macos-arm64:
     name: macOS ARM64
@@ -86,29 +100,36 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake
+          brew install cmake ninja
+
+      - name: Clone diagnostics
+        run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
+
+      - name: Build dbgshim
+        run: |
+          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build diagnostics/build --target dbgshim -j$(sysctl -n hw.logicalcpu)
 
       - name: Configure
         run: |
-          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release
+          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release -DDBGSHIM_FROM_SOURCE=ON
 
       - name: Build
         run: |
           cmake --build build -j$(sysctl -n hw.logicalcpu)
 
+      - name: Copy dbgshim
+        run: cp diagnostics/build/src/dbgshim/libdbgshim.dylib build/src/
+
+      - name: Install
+        run: |
+          cmake --install build --prefix staging
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: netcoredbg-macos-arm64
-          path: |
-            build/src/netcoredbg
-            build/src/libdbgshim.dylib
-            build/src/ManagedPart.dll
-            build/src/Microsoft.CodeAnalysis.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.dll
-            build/src/Microsoft.CodeAnalysis.Scripting.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
-          if-no-files-found: warn
+          path: staging/
 
   build-macos-x64:
     name: macOS Intel (x64)
@@ -120,29 +141,36 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake
+          brew install cmake ninja
+
+      - name: Clone diagnostics
+        run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
+
+      - name: Build dbgshim
+        run: |
+          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build diagnostics/build --target dbgshim -j$(sysctl -n hw.logicalcpu)
 
       - name: Configure
         run: |
-          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release
+          CC=clang CXX=clang++ cmake -B build -DCMAKE_BUILD_TYPE=Release -DDBGSHIM_FROM_SOURCE=ON
 
       - name: Build
         run: |
           cmake --build build -j$(sysctl -n hw.logicalcpu)
 
+      - name: Copy dbgshim
+        run: cp diagnostics/build/src/dbgshim/libdbgshim.dylib build/src/
+
+      - name: Install
+        run: |
+          cmake --install build --prefix staging
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: netcoredbg-macos-x64
-          path: |
-            build/src/netcoredbg
-            build/src/libdbgshim.dylib
-            build/src/ManagedPart.dll
-            build/src/Microsoft.CodeAnalysis.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.dll
-            build/src/Microsoft.CodeAnalysis.Scripting.dll
-            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
-          if-no-files-found: warn
+          path: staging/
 
   release:
     name: Nightly Release
@@ -184,28 +212,36 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev
+          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev ninja-build
+
+      - name: Clone diagnostics
+        run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
+
+      - name: Build dbgshim
+        run: |
+          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build diagnostics/build --target dbgshim -j$(nproc)
 
       - name: Configure
         run: |
           CC=clang CXX=clang++ cmake -B build-interop \
             -DCMAKE_BUILD_TYPE=Release \
-            -DINTEROP_DEBUGGING=1
+            -DINTEROP_DEBUGGING=1 \
+            -DDBGSHIM_FROM_SOURCE=ON
 
       - name: Build
         run: |
           cmake --build build-interop -j$(nproc)
 
+      - name: Copy dbgshim
+        run: cp diagnostics/build/src/dbgshim/libdbgshim.so build-interop/src/
+
+      - name: Install
+        run: |
+          cmake --install build-interop --prefix staging
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: netcoredbg-linux-interop
-          path: |
-            build-interop/src/netcoredbg
-            build-interop/src/libdbgshim.so
-            build-interop/src/ManagedPart.dll
-            build-interop/src/Microsoft.CodeAnalysis.dll
-            build-interop/src/Microsoft.CodeAnalysis.CSharp.dll
-            build-interop/src/Microsoft.CodeAnalysis.Scripting.dll
-            build-interop/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
-          if-no-files-found: warn
+          path: staging/

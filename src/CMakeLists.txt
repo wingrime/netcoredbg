@@ -326,7 +326,7 @@ add_custom_command(
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
 
-install(TARGETS netcoredbg DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(TARGETS netcoredbg DESTINATION .)
 
 # Build managed part of the debugger (ManagedPart.dll)
 
@@ -343,8 +343,9 @@ if (BUILD_MANAGED)
         set(MANAGEDPART_BUILD_TYPE "Release")
     endif()
 
+    set(DBGSHIM_FROM_SOURCE OFF CACHE BOOL "Use externally built dbgshim instead of NuGet package")
     set(USE_DBGSHIM_DEPENDENCY "")
-    if (DBGSHIM_DIR STREQUAL "")
+    if (DBGSHIM_DIR STREQUAL "" AND NOT DBGSHIM_FROM_SOURCE)
         set(USE_DBGSHIM_DEPENDENCY "/p:UseDbgShimDependency=true")
     endif()
 
@@ -386,7 +387,7 @@ if (BUILD_MANAGED)
         list(APPEND DLLS_TO_DEPLOY "${CMAKE_CURRENT_BINARY_DIR}/${ITEM}")
     endforeach()
 
-    install(FILES ${DLLS_TO_DEPLOY} DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(FILES ${DLLS_TO_DEPLOY} DESTINATION .)
 
     if (DBGSHIM_DIR STREQUAL "")
         if (CLR_CMAKE_PLATFORM_UNIX)
@@ -401,7 +402,7 @@ if (BUILD_MANAGED)
             message(FATAL_ERROR "Unsupported platform")
         endif()
 
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DBGSHIM_LIB_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${DBGSHIM_LIB_NAME} DESTINATION .)
     endif()
 endif()
 
@@ -426,7 +427,7 @@ if (BUILD_MANAGED AND NCDB_DOTNET_STARTUP_HOOK)
 
     add_custom_target(ncdbhook_dll ALL DEPENDS ${NCDBHOOK_DOTNET_BUILD_RESULT})
 
-    install(FILES ${NCDBHOOK_DOTNET_BUILD_RESULT} DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(FILES ${NCDBHOOK_DOTNET_BUILD_RESULT} DESTINATION .)
 endif()
 
 # documentation
