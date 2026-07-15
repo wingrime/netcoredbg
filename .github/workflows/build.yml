@@ -21,15 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang ninja-build
+          sudo apt-get install -y -qq cmake clang
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build diagnostics/build --target dbgshim -j$(nproc)
+          cd diagnostics && ./build.sh -skipmanaged -release
 
       - name: Configure
         run: |
@@ -40,7 +39,7 @@ jobs:
           cmake --build build -j$(nproc)
 
       - name: Copy dbgshim
-        run: cp diagnostics/build/src/dbgshim/libdbgshim.so build/src/
+        run: cp diagnostics/artifacts/bin/linux.x64.Release/libdbgshim.so build/src/
 
       - name: Install
         run: |
@@ -65,8 +64,7 @@ jobs:
 
       - name: Build dbgshim
         run: |
-          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build diagnostics/build --target dbgshim -j $env:NUMBER_OF_PROCESSORS
+          cd diagnostics && .\Build.cmd -skipmanaged -release
 
       - name: Configure
         shell: cmd
@@ -78,7 +76,7 @@ jobs:
           cmake --build build --config Release -j $env:NUMBER_OF_PROCESSORS
 
       - name: Copy dbgshim
-        run: copy diagnostics\build\src\dbgshim\dbgshim.dll build\src\
+        run: copy diagnostics\artifacts\bin\Windows_NT.x64.Release\dbgshim.dll build\src\
 
       - name: Install
         run: |
@@ -100,15 +98,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja
+          brew install cmake
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build diagnostics/build --target dbgshim -j$(sysctl -n hw.logicalcpu)
+          cd diagnostics && ./build.sh -skipmanaged -release
 
       - name: Configure
         run: |
@@ -119,7 +116,7 @@ jobs:
           cmake --build build -j$(sysctl -n hw.logicalcpu)
 
       - name: Copy dbgshim
-        run: cp diagnostics/build/src/dbgshim/libdbgshim.dylib build/src/
+        run: cp diagnostics/artifacts/bin/osx.arm64.Release/libdbgshim.dylib build/src/
 
       - name: Install
         run: |
@@ -141,15 +138,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install cmake ninja
+          brew install cmake
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build diagnostics/build --target dbgshim -j$(sysctl -n hw.logicalcpu)
+          cd diagnostics && ./build.sh -skipmanaged -release
 
       - name: Configure
         run: |
@@ -160,7 +156,7 @@ jobs:
           cmake --build build -j$(sysctl -n hw.logicalcpu)
 
       - name: Copy dbgshim
-        run: cp diagnostics/build/src/dbgshim/libdbgshim.dylib build/src/
+        run: cp diagnostics/artifacts/bin/osx.x64.Release/libdbgshim.dylib build/src/
 
       - name: Install
         run: |
@@ -212,15 +208,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev ninja-build
+          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cmake -S diagnostics -B diagnostics/build -G Ninja -DCMAKE_BUILD_TYPE=Release
-          cmake --build diagnostics/build --target dbgshim -j$(nproc)
+          cd diagnostics && ./build.sh -skipmanaged -release
 
       - name: Configure
         run: |
@@ -234,7 +229,7 @@ jobs:
           cmake --build build-interop -j$(nproc)
 
       - name: Copy dbgshim
-        run: cp diagnostics/build/src/dbgshim/libdbgshim.so build-interop/src/
+        run: cp diagnostics/artifacts/bin/linux.x64.Release/libdbgshim.so build-interop/src/
 
       - name: Install
         run: |
