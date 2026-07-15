@@ -37,8 +37,12 @@ jobs:
           name: netcoredbg-linux
           path: |
             build/src/netcoredbg
-            build/src/*.so
-            build/src/*.dll
+            build/src/libdbgshim.so
+            build/src/ManagedPart.dll
+            build/src/Microsoft.CodeAnalysis.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.dll
+            build/src/Microsoft.CodeAnalysis.Scripting.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
           if-no-files-found: warn
 
   build-windows:
@@ -64,7 +68,12 @@ jobs:
           name: netcoredbg-windows
           path: |
             build/src/Release/netcoredbg.exe
-            build/src/Release/*.dll
+            build/src/dbgshim.dll
+            build/src/ManagedPart.dll
+            build/src/Microsoft.CodeAnalysis.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.dll
+            build/src/Microsoft.CodeAnalysis.Scripting.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
           if-no-files-found: warn
 
   build-macos-arm64:
@@ -93,8 +102,12 @@ jobs:
           name: netcoredbg-macos-arm64
           path: |
             build/src/netcoredbg
-            build/src/*.dylib
-            build/src/*.dll
+            build/src/libdbgshim.dylib
+            build/src/ManagedPart.dll
+            build/src/Microsoft.CodeAnalysis.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.dll
+            build/src/Microsoft.CodeAnalysis.Scripting.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
           if-no-files-found: warn
 
   build-macos-x64:
@@ -123,8 +136,12 @@ jobs:
           name: netcoredbg-macos-x64
           path: |
             build/src/netcoredbg
-            build/src/*.dylib
-            build/src/*.dll
+            build/src/libdbgshim.dylib
+            build/src/ManagedPart.dll
+            build/src/Microsoft.CodeAnalysis.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.dll
+            build/src/Microsoft.CodeAnalysis.Scripting.dll
+            build/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
           if-no-files-found: warn
 
   release:
@@ -185,6 +202,10 @@ jobs:
           name: netcoredbg-linux-interop
           path: |
             build-interop/src/netcoredbg
-            build-interop/src/*.so
-            build-interop/src/*.dll
+            build-interop/src/libdbgshim.so
+            build-interop/src/ManagedPart.dll
+            build-interop/src/Microsoft.CodeAnalysis.dll
+            build-interop/src/Microsoft.CodeAnalysis.CSharp.dll
+            build-interop/src/Microsoft.CodeAnalysis.Scripting.dll
+            build-interop/src/Microsoft.CodeAnalysis.CSharp.Scripting.dll
           if-no-files-found: warn
