@@ -21,14 +21,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang liblttng-ust-dev
+          sudo apt-get install -y -qq cmake clang liblttng-ust-dev lldb-dev
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cd diagnostics && ./build.sh -skipmanaged -release
+          cd diagnostics && ./build.sh -skipmanaged -c Release
 
       - name: Configure
         run: |
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build dbgshim
         run: |
-          cd diagnostics && .\Build.cmd -skipmanaged -release
+          cd diagnostics && .\Build.cmd -skipmanaged -c Release
 
       - name: Configure
         shell: cmd
@@ -105,7 +105,7 @@ jobs:
 
       - name: Build dbgshim
         run: |
-          cd diagnostics && ./build.sh -skipmanaged -release
+          cd diagnostics && ./build.sh -skipmanaged -c Release
 
       - name: Configure
         run: |
@@ -145,7 +145,7 @@ jobs:
 
       - name: Build dbgshim
         run: |
-          cd diagnostics && ./build.sh -skipmanaged -release
+          cd diagnostics && ./build.sh -skipmanaged -c Release
 
       - name: Configure
         run: |
@@ -208,14 +208,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev liblttng-ust-dev
+          sudo apt-get install -y -qq cmake clang libunwind-dev libdw-dev liblttng-ust-dev lldb-dev
 
       - name: Clone diagnostics
         run: git clone --depth 1 https://github.com/dotnet/diagnostics.git
 
       - name: Build dbgshim
         run: |
-          cd diagnostics && ./build.sh -skipmanaged -release
+          cd diagnostics && ./build.sh -skipmanaged -c Release
 
       - name: Configure
         run: |
